@@ -1,0 +1,130 @@
+<?php
+namespace Admin\Controller;
+use Composer\Package\Loader\ValidatingArrayLoader;
+use Think\Controller;
+/**
+ * Created by PhpStorm.
+ * User: xinqiang Wang
+ * Date: 2017/1/10
+ * Time: 15:44
+ * BP申请控制器
+ */
+class BpapplyController extends MyController
+{
+
+    /**
+     * BP申请列表
+     */
+    public function bpapply()
+    {
+        $sel = D('Bpapply')->select();
+        $this->assign('sel',$sel);
+        $this->display();
+    }
+
+
+    /**
+     * 处理操作
+     */
+    public function operate()
+    {
+        $id = I('get.id');
+        $status = I('get.status');
+        if($status ==1)
+        {
+            //改成1为已处理
+            if(D('Bpapply')->operates(1,$id))
+            {
+                $this->redirect('Bpapply/bpapply');
+            }
+        }
+        else
+        {
+            //改成0为待处理
+            if(D('Bpapply')->operates(0,$id))
+            {
+                $this->redirect('Bpapply/bpapply');
+            }
+        }
+    }
+    /**
+     * 删除BP申请
+     */
+    public function delarr()
+    {
+        $id = I('get.text');
+        if(D('Bpapply')->delete($id))
+        {
+            echo 1;
+        }
+        else
+        {
+            echo 2;
+        }
+    }
+
+    /**
+     * BP详情
+     */
+    public function bpapplys()
+    {
+        $id = I('get.id');
+        $bpapplys = D('Bpapply')->selectOne($id);
+
+        if(0 == $bpapplys['is_status']){
+
+            $bpapplys['is_status'] = '待处理';
+
+        }elseif (1 == $bpapplys['is_status']){
+
+            $bpapplys['is_status'] = '已处理';
+        }else{
+
+            $bpapplys['bp_status'] = '未提交';
+        }
+
+        echo json_encode($bpapplys);
+    }
+
+    //下载之后在指定的地方，但是没有返回，只是一个空页面
+    public function downmy()
+    {
+
+        $tu = time() . 'mygoods' . ".zip";
+        $Http = new Http();
+        $Http->curlDownload("http://www.fuhuaqi.com/Upload/activity/111111.zip", "./Upload/activity/".$tu);
+        $url = "http://www.fuhuaqi.com/Upload/activity/".$tu;
+        return $url;
+    }
+
+    public function downfile($fileurl='http://www.fuhuaqi.com/Upload/activity/mongo.rar')
+    {
+        //下载本地方式一：会受到文件大小限制
+        //ob_start();
+        //$filename=$fileurl;
+        //$date=date("Ymd-H:i:m");
+        //header( "Content-type:  application/octet-stream ");
+        //header( "Accept-Ranges:  bytes ");
+        //header( "Content-Disposition:  attachment;  filename= {$date}.zip");
+        //$size=@readfile($filename);
+        //header( "Accept-Length: " .$size);
+
+        //下载本地方式二：目前下载500M左右的都没问题，就是时间太慢
+        set_time_limit(0);
+        ini_set('memory_limit', '512M');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename='.basename($fileurl));
+        header('Content-Transfer-Encoding: binary');
+        ob_end_clean();
+        $size = readfile($fileurl);
+        header( "Accept-Length: " .$size);
+    }
+
+
+
+}
+
+
+
+
+
